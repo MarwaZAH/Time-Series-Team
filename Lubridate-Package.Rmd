@@ -1,0 +1,441 @@
+---
+title: "Lubrid Package"
+author: "Marwa ZAHOUANI"
+date: "15/02/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r} 
+
+library(rnaturalearth)
+library(ggplot2)
+
+world_map_data <- ne_countries(scale= "medium", returnclass ="sf")
+ggplot(data= world_map_data)+geom_sf()
+
+```
+
+```{r}
+
+bannerCommenter::banner("Lubridate Package")
+
+```
+
+
+```{r}
+
+library(lubridate)
+library(tidyverse)
+library(nycflights13)
+```
+
+# What is the Lubridate Package
+
+Lubridate is an R package that makes it easier to work with dates and times.These tools are grouped below by common purpose. Below is a concise tour of some of the things lubridate can do for you. Lubridate was created by ### Garrett Grolemund and ### Hadley Wickham, and is now maintained by ### Vitalie Spinu.
+
+
+## Dates and times
+
+### Introduction
+
+This sheet will show you how to work with dates and times in R. At first glance, dates and times seem simple. You use them all the time in your regular life, and they don’t seem to cause much confusion. However, the more you learn about dates and times, the more complicated they seem to get. To warm up, try these three seemingly simple questions:
+- Does every year have 365 days?
+- Does every day have 24 hours?
+- Does every minute have 60 seconds?
+
+## Prerequisites
+
+This chapter will focus on the lubridate package, which makes it easier to work with dates and times in R. Lubridate is not part of core tidyverse because you only need it when you’re working with dates/times. We will also need nycflights13 for practice data.
+
+
+## Creating date/times
+
+
+There are three types of date/time data that refer to an instant in time:
+
+A date. Tibbles print this as <date>.
+
+A time within a day. Tibbles print this as <time>.
+
+A date-time is a date plus a time: it uniquely identifies an instant in time (typically to the nearest second). Tibbles print this as <dttm>. Elsewhere in R these are called POSIXct, but I don’t think that’s a very useful name.
+
+To get the current date or date-time you can use today() or now():
+
+
+```{r}
+today()
+
+now()
+
+```
+
+
+Otherwise, there are three ways you’re likely to create a date/time:
+
+* From a string.
+* From individual date-time components.
+* From an existing date/time object.
+
+They work as follows.
+
+### From strings
+
+Date/time data often comes as strings. You’ve seen one approach to parsing strings into date-times in date-times. Another approach is to use the helpers provided by lubridate. They automatically work out the format once you specify the order of the component. To use them, identify the order in which year, month, and day appear in your dates, then arrange “y”, “m”, and “d” in the same order. That gives you the name of the lubridate function that will parse your date. For example:
+
+```{r}
+
+ymd("2018-03-19")
+
+mdy("March 19th, 2018")
+
+dmy("19-Mar-2018")
+
+```
+
+These functions also take unquoted numbers. This is the most concise way to create a single date/time object, as you might need when filtering date/time data. ymd() is short and unambiguous:
+
+```{r}
+
+ymd(20180319)
+
+```
+
+ymd() and friends create dates. To create a date-time, add an underscore and one or more of “h”, “m”, and “s” to the name of the parsing function:
+
+```{r}
+
+ymd_hms("2018-03-19 19:11:59")
+
+mdy_hm("03/19/2018 08:01")
+
+```
+
+You can also force the creation of a date-time from a date by supplying a timezone:
+
+```{r}
+
+ymd(20170131, tz = "GMT")
+
+```
+
+### From individual components
+Instead of a single string, sometimes you’ll have the individual components of the date-time spread across multiple columns. This is what we have in the flights data:
+
+```{r}
+
+data(flights)
+flights %>% 
+  select(year, month, day, hour, minute)
+
+```
+
+
+### From other types
+
+You may want to switch between a date-time and a date. That’s the job of as_datetime() and as_date():
+
+
+```{r}
+
+as_datetime(today())
+
+as_date(now())
+
+```
+
+
+Sometimes you’ll get date/times as numeric offsets from the “Unix Epoch”, 1970-01-01. If the offset is in seconds, use as_datetime(); if it’s in days, use as_date().
+
+
+```{r}
+
+as_datetime(60 * 60 * 10)
+
+as_date(365 * 10 + 2)
+
+```
+
+# Date-time components
+
+Now that you know how to get date-time data into R’s date-time data structures, let’s explore what you can do with them. This section will focus on the accessor functions that let you get and set individual components. The next section will look at how arithmetic works with date-times.
+
+
+## Getting components
+
+You can pull out individual parts of the date with the accessor functions year(), month(), mday() (day of the month), yday() (day of the year), wday() (day of the week), hour(), minute(), and second().
+
+
+```{r}
+
+datetime <- ymd_hms("2022-07-07 10:37:56")
+
+year(datetime)
+
+month(datetime)
+
+mday(datetime)
+
+yday(datetime)
+
+wday(datetime)
+
+```
+
+
+For month() and wday() you can set label = TRUE to return the abbreviated name of the month or day of the week. Set abbr = FALSE to return the full name.
+
+
+```{r}
+
+month(datetime, label = TRUE)
+
+wday(datetime, label = TRUE, abbr = FALSE)
+
+```
+
+
+## Rounding
+
+An alternative approach to plotting individual components is to round the date to a nearby unit of time, with floor_date(), round_date(), and ceiling_date(). Each function takes a vector of dates to adjust and then the name of the unit round down (floor), round up (ceiling), or round to. This, for example, allows us to plot the number of flights per week.
+
+
+```{r}
+
+```
+
+
+## Setting components:
+
+You can also use each accessor function to set the components of a date/time:
+
+
+```{r}
+(datetime <- ymd_hms("2016-07-08 12:34:56"))
+
+year(datetime) <- 2022
+datetime
+
+month(datetime) <- 02
+datetime
+
+hour(datetime) <- hour(datetime) + 1
+datetime
+
+```
+Alternatively, rather than modifying in place, you can create a new date-time with update(). This also allows you to set multiple values at once.
+
+```{r}
+
+update(datetime, year = 2022, month = 2, mday = 16, hour = 11)
+
+```
+
+# Time spans
+
+Next you’ll learn about how arithmetic with dates works, including subtraction, addition, and division. Along the way, you’ll learn about three important classes that represent time spans:
+
+* durations, which represent an exact number of seconds.
+* periods, which represent human units like weeks and months.
+* intervals, which represent a starting and ending point.
+
+
+
+## Durations
+
+In R, when you subtract two dates, you get a difftime object:
+
+```{r}
+# How old is M?
+m_age <- today() - ymd(19900707)
+m_age
+
+```
+
+A difftime class object records a time span of seconds, minutes, hours, days, or weeks. This ambiguity can make difftimes a little painful to work with, so lubridate provides an alternative which always uses seconds: the duration.
+
+```{r}
+
+as.duration(m_age)
+
+```
+
+Durations come with a bunch of convenient constructors:
+
+```{r}
+
+dseconds(15)
+
+dminutes(10)
+
+dhours(c(12, 24))
+
+ddays(0:5)
+
+dweeks(3)
+
+dyears(1)
+
+```
+
+Durations always record the time span in seconds. Larger units are created by converting minutes, hours, days, weeks, and years to seconds at the standard rate (60 seconds in a minute, 60 minutes in an hour, 24 hours in day, 7 days in a week, 365 days in a year).
+
+```{r}
+```
+
+You can add and multiply durations:
+
+```{r}
+
+2 * dyears(1)
+
+dyears(1) + dweeks(12) + dhours(15)
+
+```
+
+
+You can add and subtract durations to and from days:
+
+```{r}
+tomorrow <- today() + ddays(1)
+tomorrow
+last_year <- today() - dyears(1)
+last_year
+
+```
+
+
+However, because durations represent an exact number of seconds, sometimes you might get an unexpected result:
+
+```{r}
+
+one_pm <- ymd_hms("2022-03-16 13:00:00", tz = "America/New_York")
+
+one_pm
+
+one_pm + ddays(1)
+
+```
+
+## Periods
+
+To solve this problem, lubridate provides periods. Periods are time spans but don’t have a fixed length in seconds, instead they work with “human” times, like days and months. That allows them to work in a more intuitive way:
+
+```{r}
+
+one_pm
+
+one_pm + days(1)
+
+```
+
+Like durations, periods can be created with a number of friendly constructor functions.
+
+```{r}
+
+seconds(15)
+
+minutes(10)
+
+hours(c(12, 24))
+
+days(7)
+
+months(1:6)
+
+weeks(3)
+
+years(1)
+
+```
+
+You can add and multiply periods:
+
+```{r}
+
+10 * (months(6) + days(1))
+
+days(50) + hours(25) + minutes(2)
+
+```
+
+And of course, add them to dates. Compared to durations, periods are more likely to do what you expect:
+
+```{r}
+
+# A leap year
+ymd("2021-01-01") + dyears(1)
+
+ymd("2021-01-01") + years(1)
+
+# Daylight Savings Time
+one_pm + ddays(1)
+
+one_pm + days(1)
+
+```
+
+## Intervals
+
+It’s obvious what dyears(1) / ddays(365) should return: one, because durations are always represented by a number of seconds, and a duration of a year is defined as 365 days worth of seconds.
+
+What should years(1) / days(1) return? Well, if the year was 2015 it should return 365, but if it was 2016, it should return 366! There’s not quite enough information for lubridate to give a single clear answer. What it does instead is give an estimate, with a warning:
+
+```{r}
+
+years(1) %/% days(1)
+
+```
+
+# Time zones
+
+Information about time zones in R. Sys.timezone returns the name of the current time zone.
+
+```{r}
+
+Sys.timezone()
+
+```
+
+And see the complete list of all time zone names with OlsonNames():
+
+```{r}
+
+length(OlsonNames())
+
+head(OlsonNames())
+
+```
+
+In R, the time zone is an attribute of the date-time that only controls printing. For example, these three objects represent the same instant in time:
+
+```{r}
+
+(x1 <- ymd_hms("2022-02-16 12:00:00", tz = "Africa/Algiers"))
+
+(x2 <- ymd_hms("2022-02-16 18:00:00", tz = "Europe/Copenhagen"))
+
+(x3 <- ymd_hms("2022-02-17 04:00:00", tz = "Pacific/Auckland"))
+
+```
+
+You can verify that they’re the same time using subtraction:
+
+```{r}
+
+x1 - x2
+
+x1 - x3
+
+x2 - x3
+
+```
+
+# References 
+
+* https://r4ds.had.co.nz/dates-and-times.html
+* https://rdrr.io/cran/lubridate/man/lubridate-package.html
+* https://cran.r-project.org/web/packages/lubridate/vignettes/lubridate.html#:~:text=Lubridate%20is%20an%20R%20package,now%20maintained%20by%20Vitalie%20Spinu
